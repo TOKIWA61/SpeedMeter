@@ -1,0 +1,375 @@
+import ddf.minim.*;
+import processing.io.*; 
+ PImage img;
+PImage needle;
+PImage Volneedle;
+PImage B1;
+PImage B2;
+PImage B3;
+PImage B4;
+PImage B5;
+PImage B6;
+PImage B7;
+PImage B8;
+PImage EB;
+
+PImage BC60;
+PImage BC100;
+PImage BC160;
+PImage BC200;
+PImage BC260;
+PImage BC300;
+PImage BC360;
+PImage BC400;
+PImage BC460;
+PImage BC500;
+PImage BC560;
+PImage BC600;
+PImage BC660;
+PImage BC700;
+PImage hidden;
+
+PImage ATS_P;
+PImage B_Re;
+PImage malfunction;
+PImage P_power;
+PImage P_approach;
+PImage panelEB;
+PImage RB;
+PImage PB;
+PImage ATS_operation;
+
+PFont Myriad;
+PFont MS;
+
+/*Minim minim;
+AudioPlayer ATS_chime;
+AudioPlayer ATS_ararm;
+*/
+float speed = 0;
+float deg = 0;
+float Vdeg = 0;
+float ACVdeg = 0;
+float Voltage = 20;
+float ACVoltage = 0;
+float T_time;
+float freq;
+float dis;
+boolean ATSflag1 = false;
+boolean ATSflag2 = false;
+boolean ATSflag3 = false;
+int B = 0;
+int i = 0;
+int []date = new int [3];
+float sum = 0;
+float limit_speed = 40;
+import processing.serial.*;
+Serial port_s;
+
+void setup(){
+
+  GPIO.pinMode(2,GPIO.INPUT_PULLUP);
+  surface.setResizable( true );
+  //((java.awt.Canvas)surface.getNative()).requestFocus();
+  
+  port_s = new Serial(this,"/dev/ttyACM0",9600);
+  img = loadImage("panel.png");
+  fullScreen();
+  noCursor();
+  
+  B1 = loadImage("B1.PNG");
+  B2 = loadImage("B2.PNG");
+  B3 = loadImage("B3.PNG");
+  B4 = loadImage("B4.PNG");
+  B5 = loadImage("B5.PNG");
+  B6 = loadImage("B6.PNG");
+  B7 = loadImage("B7.PNG");
+  B8 = loadImage("B8.PNG");
+  EB = loadImage("EB.png");
+  
+  BC60 = loadImage("BC60.png");
+  BC100 = loadImage("BC100.png");
+  BC160 = loadImage("BC160.png");
+  BC200 = loadImage("BC200.png");
+  BC260 = loadImage("BC260.png");
+  BC300 = loadImage("BC300.png");
+  BC360 = loadImage("BC360.png");
+  BC400 = loadImage("BC400.png");
+  BC460 = loadImage("BC460.png");
+  BC500 = loadImage("BC500.png");
+  BC560 = loadImage("BC560.png");
+  BC600 = loadImage("BC600.png");
+  BC660 = loadImage("BC660.png");
+  BC700 = loadImage("BC700.png");
+
+ /*
+  ATS_P = loadImage("ATS-P.png");
+  B_Re = loadImage("B_Re.png");
+  malfunction = loadImage("malfunction.png");
+  P_power = loadImage("P_power.png");
+  P_approach = loadImage("P_approach.png");
+  panelEB = loadImage("panelEB.png");
+  RB = loadImage("RB.png");
+  needle = loadImage("needle2.png");
+  Volneedle = loadImage("Volneedle.png");
+  PB = loadImage("PB.png");
+  ATS_operation = loadImage("ATS_operation.png");
+  */
+
+  Myriad = createFont("myriad-bold-italic.ttf",90);
+  MS = createFont("MS-Gothic-30.vlw",20);
+  
+  textFont(Myriad);
+ /* minim = new Minim(this);
+  ATS_chime = minim.loadFile("/home/tokiwa/sketchbook/SpeedMeter/ATS-chime.mp3");
+  ATS_ararm = minim.loadFile("/home/tokiwa/sketchbook/SpeedMeter/ATS-ararm.mp3");
+  
+  ATS_ararm.play();
+  ATS_ararm.rewind();*/
+}
+
+void draw(){
+  background(0);
+  image(img,0,0,960,720);
+  
+   //指針角度計算
+  dis = 70;
+  deg = -120 +(speed * 1.5);
+  Voltage = date[1];
+  Vdeg = -120 + ((Voltage-20)*1.5);
+  ACVdeg = -120 + (ACVoltage*1.5);
+  
+  if(Vdeg <= -120){
+    Vdeg = -120;
+  }
+  pushMatrix();
+  translate(685,514);           //速度指針描画
+  rotate(radians(deg));
+  image(needle,-13,-150); 
+  popMatrix();
+  
+  fill(255);                      //速度表示
+  textAlign(RIGHT);
+  text((int)speed,750,650);
+  
+  pushMatrix();                 //バッテリ電圧表示
+  translate(178,177);
+  rotate(radians(Vdeg));
+  image(Volneedle,-8,-82,17,95);
+  popMatrix();
+  
+  pushMatrix();              //交流電圧表示
+  translate(437,175);
+  rotate(radians(ACVdeg));
+  image(Volneedle,-8,-82,17,95);
+  popMatrix();
+  
+  Breakdrawing();
+  BC_drawing();
+  Panel_drawing();
+  limit_speed();
+    //text("(" + mouseX + "," + mouseY + ")", 500, 500);       //デバッグ用座標表示
+    //text(ACVoltage ,400,300);
+}
+
+void Breakdrawing(){                        //ブレーキ段数表示
+  if(64 <= dis && dis < 66){
+     image(B1,87,381);
+  }
+  else if(62 <= dis && dis < 64){
+     image(B2,87,381);
+  }
+  else if(60 <= dis && dis < 62){
+    image(B3,87,381);
+  }
+  else if(55 <= dis && dis < 60){
+    image(B4,87,381);
+  }
+  else if(50 <= dis && dis < 55){
+    image(B5,87,381);
+  }
+  else if(45 <= dis && dis < 50){
+    image(B6,87,381);
+  }
+  else if(30<= dis && dis < 45){
+    image(B7,87,381);
+  }
+  else if(25<= dis && dis < 30){
+    image(B8,87,374);
+  }
+  else if(0 <= dis && dis < 25){
+    image(EB,87,268);
+  }
+}
+  
+void BC_drawing(){                    //BC圧表示
+
+  if(50 <= dis && dis < 55){
+    image(BC60,177,322);
+  }
+  else if(45 <= dis && dis <50){
+    image(BC100,177,322);
+  }
+  else if(40 <= dis && dis < 45){
+    image(BC160,177,322);
+  }
+  else if(35 <= dis && dis < 40){
+    image(BC200,177,322);
+  }
+  else if(30 <= dis && dis < 35){
+    image(BC260,177,322);
+  }
+  else if(25 <= dis && dis < 30){
+    image(BC300,177,322);
+  }
+  else if(20 <= dis && dis < 25){
+    image(BC360,177,322);
+  }
+  else if(15 <= dis && dis < 20){
+    image(BC400,177,322);
+  }
+  else if(10 <= dis && dis < 15){
+    image(BC460,177,322);
+  }
+  else if(4 <= dis && dis < 10){
+    image(BC500,177,322);
+  }
+  else if(dis < 4){
+    image(BC560,177,322);
+  }
+
+}
+
+/*　void Panel_drawing(){                //保安パネル表示
+  if(GPIO.digitalRead(2) == GPIO.HIGH){
+    image(PB,861,149);
+  }
+  image(ATS_P,750,52,31,80);
+  image(P_power,565,53,31,80);
+  
+  if(dis < 75){
+    image(RB,639,53,31,80);
+  }if(dis < 5){
+    image(panelEB,676,53,31,80);
+  }
+}  */
+
+void limit_speed(){
+ if(limit_speed != 0){
+   
+  textSize(40);
+  textAlign(LEFT);
+  text((int)limit_speed,690,580);
+  
+  textFont(MS);
+  text("制限:",640,575);  //"制限"
+  textFont(Myriad);
+  
+ 
+  
+  if(limit_speed+10 <= speed){
+    //image(P_approach,603,53,31,80);
+    
+    if(ATSflag1 == false){
+      //ATS_chime.play();
+      //ATS_chime.rewind();
+    }
+    ATSflag1 = true;
+  }else{ATSflag1 = false;}
+  
+  if(limit_speed+15 <= speed){
+    //image(ATS_operation,873,53,31,80);
+    if(ATSflag2 == false){
+      //ATS_ararm.play();
+      //ATS_chime.rewind();
+    }
+    ATSflag2 = true;
+  }else{
+  ATSflag2 = false;
+  //ATS_ararm.pause();
+  //ATS_ararm.rewind();
+}
+ }
+}
+
+void serialEvent(Serial p){
+  if(port_s.available() >= 4){
+    if(port_s.read() == 'H'){
+      date[0] = port_s.read();
+      date[1] = port_s.read();
+      speed = port_s.read();
+    }
+  }
+}
+
+void keyPressed(){
+ 
+    if(key == '1'){
+      limit_speed = 10;
+      //ATS_chime.play();
+      //ATS_chime.rewind();
+    }
+    else if(key == '2'){
+      //ATS_chime.play();
+      //ATS_chime.rewind();
+      limit_speed = 20;
+    }
+    else if(key == '3'){
+      //ATS_chime.play();
+      //ATS_chime.rewind();
+      limit_speed = 30;
+    }
+    else if(key == '4'){
+      //ATS_chime.play();
+      //ATS_chime.rewind();
+      limit_speed = 40;
+    }
+    else if(key == '5'){
+      //ATS_chime.play();
+      //ATS_chime.rewind();
+      limit_speed = 50;
+    }
+    else if(key == '6'){
+      //ATS_chime.play();
+      //ATS_chime.rewind();
+      limit_speed = 60;
+    }
+    else if(key == '7'){
+      //ATS_chime.play();
+      //ATS_chime.rewind();
+      limit_speed = 70;
+    }
+    else if(key == '8'){
+      //ATS_chime.play();
+      //ATS_chime.rewind();
+      limit_speed = 80;
+    }
+    else if(key == '9'){
+      //ATS_chime.play();
+      //ATS_chime.rewind();
+      limit_speed = 90;
+    }
+    else if(key == '0'){
+      //ATS_chime.play();
+      //ATS_chime.rewind();
+      limit_speed = 100;
+    }
+    else if(key == 'a'){
+      speed ++;
+    }
+    else if(key == 'b'){
+      speed --;
+    }
+    else if(keyCode == ENTER){
+      limit_speed = 0;
+      //ATS_chime.play();
+      //ATS_chime.rewind();
+
+    }
+}
+/*
+void stop(){
+  ATS_chime.close();
+  minim.stop();
+  super.stop();
+}*/
