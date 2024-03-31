@@ -1,0 +1,48 @@
+volatile unsigned long interruptBefore = 0;//前回の割り込み
+volatile unsigned long interruptAfter = 0;//今回の割り込み
+volatile unsigned long pulsePeriod = 0;//パルス周期　
+float freq = 0;
+float SPEED = 0;
+int t;
+
+void setup() {
+  Serial.begin(9600);//シリアル通信を開始
+  //pinMode(2, INPUT_PULLUP);//ピンモードの設定
+  pinMode(3, INPUT);//ピンモードの設定
+  attachInterrupt(3, tachometer, FALLING);//外部割り込み（Pin3）
+
+}
+
+void loop() {
+ delay(200);
+ t ++;
+ if(t >= 5){
+  SPEED = 0;
+  t = 0;
+ }
+  int value,mapvalue,Vol;
+  float Voltage = 0;
+
+  value = analogRead(A0);
+  Vol = analogRead(A1);
+  mapvalue = map(value,0,1023,0,200);
+  Voltage = ((5.0/1023.0 )* Vol) * ((1500+750)/750.0);
+  Serial.write('H');
+  Serial.write(mapvalue);
+  Serial.write((int)(Voltage * 10));
+  Serial.write((int)SPEED);
+}
+
+
+void tachometer() {
+  interruputAfter = micros();//現在の時刻を記録
+  pulsePeriod = interruptAfter - interruptBefore;//パルス周期を計算
+  interruptBefore = interruptAfter;//今回の値を前回の値に代入する
+  
+    if(pulsePeriod != 0){
+    freq = (1.0/pulsePriod)*1000000;
+    }else{freq = 0;}
+   
+   SPEED = freq*3600.0/(637*1.88);
+   t = 0;
+}
