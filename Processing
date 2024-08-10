@@ -1,6 +1,5 @@
 import ddf.minim.*;
-import processing.io.*; 
- PImage img;
+PImage img;
 PImage needle;
 PImage Volneedle;
 PImage B1;
@@ -27,25 +26,29 @@ PImage BC560;
 PImage BC600;
 PImage BC660;
 PImage BC700;
-PImage hidden;
 
-PImage ATS_P;
-PImage B_Re;
-PImage malfunction;
-PImage P_power;
-PImage P_approach;
-PImage panelEB;
-PImage RB;
-PImage PB;
-PImage ATS_operation;
+/*                                        //保安パネル画像素材
+PImage hoan_panel;     //保安パネル
+PImage ATS_P;          //「ATS-P表示」
+PImage B_Re;           //「ブレーキ解放」
+PImage malfunction;    //「故障」
+PImage P_power;        //「P電源」
+PImage P_approach;     //「パターン接近」
+PImage panelEB;        //「非常ブレーキ」(パネル)
+PImage RB;             //「常用ブレーキ」
+PImage PB;             //「駐車ブレーキ」
+PImage ATS_operation;  //「ATS動作」
+*/
 
 PFont Myriad;
 PFont MS;
 
-/*Minim minim;
+/*                      
+Minim minim;             
 AudioPlayer ATS_chime;
 AudioPlayer ATS_ararm;
 */
+
 float speed = 0;
 float deg = 0;
 float Vdeg = 0;
@@ -54,30 +57,28 @@ float Voltage = 20;
 float ACVoltage = 0;
 float T_time;
 float freq;
-float dis;
+float dis = 0;
 boolean ATSflag1 = false;
 boolean ATSflag2 = false;
 boolean ATSflag3 = false;
 int B = 0;
 int i = 0;
-int []date = new int [3];
+int a = 0;
+int []date = new int [2];
 float sum = 0;
 float limit_speed = 40;
 import processing.serial.*;
 Serial port_s;
 
-void setup(){
 
-  GPIO.pinMode(2,GPIO.INPUT_PULLUP);
-  surface.setResizable( true );
-  //((java.awt.Canvas)surface.getNative()).requestFocus();
+void setup(){
+ surface.setResizable( true );
+  ((java.awt.Canvas)surface.getNative()).requestFocus();
+  //port_s = new Serial(this,"COM3",9600);  //シリアルポート指定
+  img = loadImage("panel_haifu2.png");
+  size(1000,1000);
   
-  port_s = new Serial(this,"/dev/ttyACM0",9600);
-  img = loadImage("panel.png");
-  fullScreen();
-  noCursor();
-  
-  B1 = loadImage("B1.PNG");
+  B1 = loadImage("B1.PNG");         //画像ファイル読み込み
   B2 = loadImage("B2.PNG");
   B3 = loadImage("B3.PNG");
   B4 = loadImage("B4.PNG");
@@ -101,40 +102,39 @@ void setup(){
   BC600 = loadImage("BC600.png");
   BC660 = loadImage("BC660.png");
   BC700 = loadImage("BC700.png");
-
- /*
-  ATS_P = loadImage("ATS-P.png");
+  /*
+  ATS_P = loadImage("ATS-P.png");                //画像ファイル読み込み
   B_Re = loadImage("B_Re.png");
   malfunction = loadImage("malfunction.png");
   P_power = loadImage("P_power.png");
   P_approach = loadImage("P_approach.png");
   panelEB = loadImage("panelEB.png");
   RB = loadImage("RB.png");
+  hoan_panel = loadImage("hoan_panel.png")
+  */
   needle = loadImage("needle2.png");
   Volneedle = loadImage("Volneedle.png");
+  /*
   PB = loadImage("PB.png");
   ATS_operation = loadImage("ATS_operation.png");
   */
-
-  Myriad = createFont("myriad-bold-italic.ttf",90);
+  
+  Myriad = createFont("myriad-bold-italic.ttf",90); //フォントファイル読み込み
   MS = createFont("MS-Gothic-30.vlw",20);
-  
-  textFont(Myriad);
- /* minim = new Minim(this);
-  ATS_chime = minim.loadFile("/home/tokiwa/sketchbook/SpeedMeter/ATS-chime.mp3");
-  ATS_ararm = minim.loadFile("/home/tokiwa/sketchbook/SpeedMeter/ATS-ararm.mp3");
-  
-  ATS_ararm.play();
-  ATS_ararm.rewind();*/
+  /*
+  minim = new Minim(this);
+  ATS_chime = minim.loadFile("ATS-chime.mp3");      //音声ファイル読み込み
+  ATS_ararm = minim.loadFile("ATS-ararm.mp3");
+  */
 }
 
 void draw(){
   background(0);
   image(img,0,0,960,720);
   
-   //指針角度計算
-  dis = 70;
-  deg = -120 +(speed * 1.5);
+
+  deg = -120 + (speed * 1.5);    //指針角度計算
+ // dis = date[0];               //PC単独動作時はコメントアウト
   Voltage = date[1];
   Vdeg = -120 + ((Voltage-20)*1.5);
   ACVdeg = -120 + (ACVoltage*1.5);
@@ -145,12 +145,14 @@ void draw(){
   pushMatrix();
   translate(685,514);           //速度指針描画
   rotate(radians(deg));
-  image(needle,-13,-150); 
+  image(needle,-13,-150);    //-16,-150,35,184
   popMatrix();
   
   fill(255);                      //速度表示
   textAlign(RIGHT);
+  textFont(Myriad);
   text((int)speed,750,650);
+
   
   pushMatrix();                 //バッテリ電圧表示
   translate(178,177);
@@ -166,72 +168,73 @@ void draw(){
   
   Breakdrawing();
   BC_drawing();
-  Panel_drawing();
-  limit_speed();
-    //text("(" + mouseX + "," + mouseY + ")", 500, 500);       //デバッグ用座標表示
-    //text(ACVoltage ,400,300);
+ // Panel_drawing();      //保安パネル表示
+  limit_speed();        //速度制限
+  
+ // text("(" + mouseX + "," + mouseY + ")", 500, 500);      //デバッグ用 マウスポインタ座標表示
+ // text(ACVoltage ,400,300);
 }
 
 void Breakdrawing(){                        //ブレーキ段数表示
-  if(64 <= dis && dis < 66){
+  if(24 <= dis && dis < 25){
      image(B1,87,381);
   }
-  else if(62 <= dis && dis < 64){
+  else if(21 <= dis && dis < 24){
      image(B2,87,381);
   }
-  else if(60 <= dis && dis < 62){
+  else if(18 <= dis && dis < 21){
     image(B3,87,381);
   }
-  else if(55 <= dis && dis < 60){
+  else if(15 <= dis && dis < 18){
     image(B4,87,381);
   }
-  else if(50 <= dis && dis < 55){
+  else if(12 <= dis && dis < 15){
     image(B5,87,381);
   }
-  else if(45 <= dis && dis < 50){
+  else if(9 <= dis && dis < 12){
     image(B6,87,381);
   }
-  else if(30<= dis && dis < 45){
+  else if(6 <= dis && dis < 9){
     image(B7,87,381);
   }
-  else if(25<= dis && dis < 30){
+  else if(3 <= dis && dis < 6){
     image(B8,87,374);
   }
-  else if(0 <= dis && dis < 25){
+  else if(0 <= dis && dis < 3){
     image(EB,87,268);
   }
 }
-  
+  //  image(B1,87,381);
 void BC_drawing(){                    //BC圧表示
 
-  if(50 <= dis && dis < 55){
+  if(24 <= dis && dis < 25){
     image(BC60,177,322);
   }
-  else if(45 <= dis && dis <50){
+  else if(21 <= dis && dis <24){
     image(BC100,177,322);
   }
-  else if(40 <= dis && dis < 45){
+  else if(18 <= dis && dis < 21){
     image(BC160,177,322);
   }
-  else if(35 <= dis && dis < 40){
+  else if(16 <= dis && dis < 18){
     image(BC200,177,322);
   }
-  else if(30 <= dis && dis < 35){
+  else if(14 <= dis && dis < 16){
     image(BC260,177,322);
   }
-  else if(25 <= dis && dis < 30){
+  else if(12 <= dis && dis < 14){
     image(BC300,177,322);
   }
-  else if(20 <= dis && dis < 25){
+  else if(10 <= dis && dis < 12){
     image(BC360,177,322);
   }
-  else if(15 <= dis && dis < 20){
+  else if(8 <= dis && dis < 10){
     image(BC400,177,322);
   }
-  else if(10 <= dis && dis < 15){
+  else if(6 <= dis && dis < 8){
     image(BC460,177,322);
   }
-  else if(4 <= dis && dis < 10){
+  else if(4 <= dis && dis < 6){
     image(BC500,177,322);
   }
   else if(dis < 4){
@@ -239,33 +242,33 @@ void BC_drawing(){                    //BC圧表示
   }
 
 }
-
-/*　void Panel_drawing(){                //保安パネル表示
-  if(GPIO.digitalRead(2) == GPIO.HIGH){
+/*
+void Panel_drawing(){                //保安パネル表示
+  if(0 < i){
     image(PB,861,149);
   }
   image(ATS_P,750,52,31,80);
   image(P_power,565,53,31,80);
   
-  if(dis < 75){
+  if(dis < 25){
     image(RB,639,53,31,80);
-  }if(dis < 5){
+  }if(dis < 3){
     image(panelEB,676,53,31,80);
   }
-}  */
+}
+*/
 
-void limit_speed(){
+
+void limit_speed(){              //ATS-P表示
  if(limit_speed != 0){
    
+  textFont(MS);
+  text("制限:",690,575);
+  
+  textFont(Myriad);
   textSize(40);
   textAlign(LEFT);
   text((int)limit_speed,690,580);
-  
-  textFont(MS);
-  text("制限:",640,575);  //"制限"
-  textFont(Myriad);
-  
- 
   
   if(limit_speed+10 <= speed){
     //image(P_approach,603,53,31,80);
@@ -281,18 +284,18 @@ void limit_speed(){
     //image(ATS_operation,873,53,31,80);
     if(ATSflag2 == false){
       //ATS_ararm.play();
-      //ATS_chime.rewind();
+      //ATS_ararm.rewind();
     }
     ATSflag2 = true;
   }else{
-  ATSflag2 = false;
+  //ATSflag2 = false;
   //ATS_ararm.pause();
   //ATS_ararm.rewind();
-}
+  }
  }
 }
 
-void serialEvent(Serial p){
+ void serialEvent(Serial p){              //シリアル通信 受信割り込み
   if(port_s.available() >= 4){
     if(port_s.read() == 'H'){
       date[0] = port_s.read();
@@ -302,7 +305,9 @@ void serialEvent(Serial p){
   }
 }
 
-void keyPressed(){
+  
+
+void keyPressed(){   //制限速度指定
  
     if(key == '1'){
       limit_speed = 10;
@@ -354,22 +359,46 @@ void keyPressed(){
       //ATS_chime.rewind();
       limit_speed = 100;
     }
-    else if(key == 'a'){
-      speed ++;
-    }
-    else if(key == 'b'){
-      speed --;
-    }
     else if(keyCode == ENTER){
       limit_speed = 0;
       //ATS_chime.play();
       //ATS_chime.rewind();
-
+      //ATS_ararm.pause();
+      //ATS_ararm.rewind();
+    }
+    else if(key == 'a'){            //Arduino接続時はコメントアウト  
+      speed += 1;
+    }
+    else if(key == 'b'){
+      speed -= 1;
+    }
+    else if(key == 'q'){
+      dis += 1;
+    }
+    else if(key == 'z'){
+      dis -= 1;
     }
 }
-/*
+/*  
 void stop(){
   ATS_chime.close();
   minim.stop();
   super.stop();
-}*/
+}
+*/    
+    /*if(B >= 9){
+      B = 9;
+    }else if(B <= 0){B = 0;}*/
+
+
+/*if(port_d.available() > 0){
+    dis = int(trim(port_d.readString()));
+    dis /= 100;
+   
+    if(dis <= 3.0){
+      dis = 3.0;
+  }else if(dis >= 7.2){
+    dis = 7.0;
+  }
+  }*/
+ //text("(" + mouseX + "," + mouseY + ")", mouseX + 10, mouseY);
