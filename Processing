@@ -74,7 +74,7 @@ Serial port_s;
 void setup(){
  surface.setResizable( true );
   ((java.awt.Canvas)surface.getNative()).requestFocus();
-  //port_s = new Serial(this,"COM3",9600);  //シリアルポート指定
+  //port_s = new Serial(this,"COM3",9600);  //シリアル通信開始、ポート指定
   img = loadImage("panel_haifu2.png");
   size(1000,1000);
   
